@@ -1,0 +1,8 @@
+# title: Table 14.2.1 Primary efficacy endpoint: change from baseline in HbA1c (%) at week 26 (full analysis set, MMRM)
+parameter,SYN-301,Placebo
+LS mean change from baseline,-1.21,-0.31
+Standard error,0.08,0.08
+Treatment difference vs placebo,-0.90,
+95% CI lower,-1.12,
+95% CI upper,-0.68,
+p-value,<0.001,

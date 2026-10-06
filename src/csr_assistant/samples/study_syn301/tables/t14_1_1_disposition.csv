@@ -1,0 +1,8 @@
+# title: Table 14.1.1 Patient disposition (all randomised patients)
+parameter,SYN-301 n,SYN-301 %,Placebo n,Placebo %
+Randomised,120,100.0,120,100.0
+Treated (safety set),119,99.2,120,100.0
+Completed week 26,108,90.0,110,91.7
+Discontinued study treatment,12,10.0,10,8.3
+Discontinued due to adverse event,7,5.8,3,2.5
+Lost to follow-up,2,1.7,3,2.5

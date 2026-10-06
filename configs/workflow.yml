@@ -1,0 +1,22 @@
+# nat run --config_file configs/workflow.yml --input "src/csr_assistant/samples/study_syn301/draft_csr.md | src/csr_assistant/samples/study_syn301/tables | src/csr_assistant/samples/study_syn301/synopsis.md"
+llms:
+  reasoning_llm:
+    _type: nim
+    model_name: nvidia/nemotron-3-super-120b-a12b
+    temperature: 0.0
+    max_tokens: 4096
+    chat_template_kwargs:
+      enable_thinking: false
+  fast_llm:
+    _type: nim
+    model_name: nvidia/nemotron-3.5-lightning-30b-a3b
+    temperature: 0.0
+    max_tokens: 2048
+    chat_template_kwargs:
+      enable_thinking: false
+
+workflow:
+  _type: csr_review
+  llm_name: reasoning_llm
+  fast_llm_name: fast_llm
+  max_revisions: 1

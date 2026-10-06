@@ -1,0 +1,18 @@
+{
+  "missing_sections": ["5.3", "10.1", "12.1"],
+  "empty_sections": ["12.2"],
+  "injected_errors": [
+    {"contains": "decreased by 1.4%", "type": "number", "note": "table says -1.21"},
+    {"contains": "superior to all approved GLP-1", "type": "unsupported", "note": "no active comparator in the study"},
+    {"contains": "no gastrointestinal safety signal", "type": "overstated", "note": "nausea 18.5% vs 5.0%, diarrhoea 11.8% vs 4.2%"},
+    {"contains": "4.5 kg", "type": "number", "note": "table says -3.1 kg"}
+  ],
+  "correct_claims": [
+    "Mean age was 57.9 years",
+    "Mean baseline HbA1c was 8.3%",
+    "The treatment difference was -0.90%",
+    "48.3% of patients on SYN-301 reached HbA1c below 7%",
+    "Serious adverse events occurred in 5.0% and 5.8%",
+    "One death occurred in the placebo group"
+  ]
+}

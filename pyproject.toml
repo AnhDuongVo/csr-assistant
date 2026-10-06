@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "csr-assistant"
+version = "0.2.0"
+description = "Clinical study report assistant: ICH E3 structure check, table-grounded drafting, and a reviewer that verifies every number in code."
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Anh Duong Vo" }]
+keywords = ["clinical-study-report", "ich-e3", "regulatory", "llm", "agents", "nemotron"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: Apache Software License",
+  "Intended Audience :: Healthcare Industry",
+  "Intended Audience :: Science/Research",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Scientific/Engineering :: Medical Science Apps.",
+]
+dependencies = [
+  "openai>=1.40",
+  "langgraph>=0.3",
+  "pydantic>=2.6",
+  "typer>=0.12",
+  "rich>=13",
+  "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+docx = ["python-docx>=1.1"]
+pdf = ["pdfplumber>=0.11"]
+nat = ["nvidia-nat[langchain,eval,profiler,mcp]>=1.9"]
+dev = ["pytest>=8", "pytest-asyncio>=0.23", "python-docx>=1.1", "ruff==0.16.10"]
+
+[project.scripts]
+csr = "csr_assistant.cli:app"
+
+[project.entry-points.'nat.components']
+csr_assistant = "csr_assistant.nat_plugin.register"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+csr_assistant = ["samples/study_syn301/*.md", "samples/study_syn301/*.json", "samples/study_syn301/tables/*.csv"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
+ignore = ["E501", "B008", "RUF001", "RUF002", "RUF003", "RUF005"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B011"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
