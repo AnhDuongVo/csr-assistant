@@ -1,6 +1,6 @@
 # csr-assistant
 
-**An assistant for clinical study reports (ICH E3) that never lets the model do arithmetic.** It takes a draft
+**An assistant for clinical study reports (ICH E3) in which numbers are checked by code, not by the model.** It takes a draft
 CSR, the study's source tables and the protocol synopsis, and:
 
 1. checks the draft against the **ICH E3** structure: which required sections are missing, empty or out of order;
@@ -136,6 +136,8 @@ src/csr_assistant/
   samples/           synthetic study SYN-301-03
 tests/               offline tests
 ```
+
+> **Design note.** The small OpenAI-compatible client (`llm.py`) and settings (`config.py`) are intentionally vendored rather than shared as a package, so each example is self-contained and runs with a single `pip install`. The same module appears in the sibling projects by design.
 
 ## Development
 
