@@ -9,7 +9,7 @@ description = "Clinical study report assistant: ICH E3 structure check, table-gr
 readme = "README.md"
 requires-python = ">=3.11,<3.14"
 license = { text = "Apache-2.0" }
-authors = [{ name = "Anh Duong Vo" }]
+authors = [{ name = "Maria (Anh Duong Vo)" }]
 keywords = ["clinical-study-report", "ich-e3", "regulatory", "llm", "agents", "nemotron"]
 classifiers = [
   "Programming Language :: Python :: 3",
