@@ -25,6 +25,12 @@ flowchart LR
     H --> O[Revised CSR + review report]
 ```
 
+## Demo
+
+![csr-assistant demo](docs/demo.gif)
+
+Two report sections in the interactive demo. A placebo-arm change of -1.4 is flagged against the table's -0.35 and verified once corrected; a discontinuation count of 3 is flagged against the table's 2. The video is on [anhduongvo.github.io](https://anhduongvo.github.io/projects/clinical-agentic-ai/).
+
 ## Why
 
 Clinical study reports run to hundreds of pages, follow ICH E3, and every number must match the statistical
