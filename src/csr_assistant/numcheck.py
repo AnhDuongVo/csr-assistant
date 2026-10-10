@@ -2,7 +2,7 @@
 
 A number counts as supported if it appears in the cited rows (or, for uncited text, anywhere in the source
 tables and synopsis) after rounding to the precision written in the sentence, or if it is a percentage that
-follows from two numbers in the same row (n / N). Signs are ignored ("decreased by 1.2" vs "-1.21").
+follows from two numbers in the same row (n / N). Explicit signs and directional changes are checked; contextual arm checks use labelled cells.
 """
 
 from __future__ import annotations
@@ -75,6 +75,7 @@ def unverified(
             signed.setdefault(abs(v), []).append(v)
     counts = [[v for v, d, pct, _ in numbers(s) if d == 0 and not pct and v >= 1] for s in (count_sources or sources)]
     increase = bool(_INCREASE.search(sentence)) and not _DECREASE.search(sentence)
+    decrease = bool(_DECREASE.search(sentence)) and not _INCREASE.search(sentence)
     missing = []
     for value, decimals, pct, raw in numbers(sentence):
         if value in ignore:
@@ -82,12 +83,46 @@ def unverified(
         # Whole counts must match exactly ("4 deaths" is not 4.2); decimals and percentages match at the written precision.
         hits = [v for v, d in flat if (_close(value, v, decimals) if (decimals or pct) else v == value)]
         if hits:
-            if increase and not raw.startswith("-") and all(x < 0 for h in hits for x in signed.get(h, [h])):
+            signs = [x for h in hits for x in signed.get(h, [h])]
+            if raw.startswith("-") and not any(x < 0 for x in signs):
+                missing.append(f"{raw} (signed value differs from source)")
+            elif increase and not raw.startswith("-") and all(x < 0 for x in signs):
                 missing.append(f"{raw} (source value is negative but the sentence says increase)")
+            elif decrease and not raw.startswith("-") and all(x > 0 for x in signs) and (decimals or pct):
+                missing.append(f"{raw} (source value is positive but the sentence says decrease)")
             continue
         if pct and any(
             a <= b and _close(value, 100 * a / b, decimals) for vals in counts for a, b in permutations(vals, 2)
         ):
             continue
         missing.append(raw)
+    return missing
+
+
+def contextual_unverified(sentence: str, sources: list[str]) -> list[str]:
+    """Check explicit arm/value associations in labelled table cells.
+
+    Only handles clauses naming a single arm. Multiple arms in one clause require
+    semantic review; this helper does not infer 'respectively' ordering.
+    """
+    cells = []
+    for source in sources:
+        for cell in source.split(" | "):
+            if ": " in cell:
+                label, value = cell.split(": ", 1)
+                cells.append((label, value))
+    arms = set()
+    for label, _ in cells:
+        arm = re.sub(r"\s+(?:n\b.*|%.*|mean\b.*|change\b.*)", "", label, flags=re.I).strip()
+        if arm and (arm.lower() == "placebo" or re.search(r"[A-Z]+-\d+", arm)):
+            arms.add(arm)
+    missing = []
+    for clause in re.split(r"[;]|\band\b|\bversus\b|\bvs\.?\b", sentence, flags=re.I):
+        named = [a for a in arms if re.search(r"(?<!\w)" + re.escape(a) + r"(?!\w)", clause, re.I)]
+        if len(named) != 1:
+            continue
+        arm = named[0]
+        values = [v for label, v in cells if label.lower().startswith(arm.lower())]
+        for raw in unverified(clause, values, {95.0}):
+            missing.append(f"{raw} not in {arm} cells")
     return missing

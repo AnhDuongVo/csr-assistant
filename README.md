@@ -1,5 +1,48 @@
 # csr-assistant
 
+## What this project demonstrates
+
+Demonstrates source-table drafting, ICH E3 structure screening and review findings for study-report text.
+
+## Watch the demo
+
+![Demo](docs/demo.gif)
+
+[Portfolio videos](https://anhduongvo.github.io/projects/clinical-agentic-ai/). Clinical recordings use the separate simplified interactive demo.
+
+## Try it offline
+
+Python 3.11–3.13. In a fresh virtual environment, from this repository:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -e ".[dev]"
+pytest -q
+```
+
+## Run with NVIDIA or another configured backend
+
+Generation needs `NVIDIA_API_KEY`, `NIM_BASE_URL`, `CSR_MODEL_FAST` and `CSR_MODEL_REASONING`; `csr models` lists served IDs. `csr demo` requires an endpoint. Explicit writer review is optional in code and required before real use.
+
+Model IDs in `.env.example` and NAT configs are examples, not a current availability guarantee. Check your endpoint before running; the validation below does not include live model execution.
+
+## What is verified
+
+Row citation existence, numerical rounding, explicit signs/direction and selected arm-labelled cells. Endpoint selection is lexical; multi-arm sentences and qualitative claims need semantic review. This is not a clinically validated report checker.
+
+| Validation layer | Status |
+|---|---|
+| Unit/regression tests | Executed locally on Python 3.12; see `docs/validation.md` |
+| Mocked/simulated integrations | Executed locally; scope documented in tests |
+| Live hosted endpoints | Not executed; access and appropriate inputs required |
+| Self-hosted GPU endpoints | Not executed |
+| Domain-specific validation | Not completed; synthetic examples only |
+
+See [validation details](docs/validation.md). The architecture and detailed workflows follow.
+
+## Architecture and detailed workflows
+
 **An assistant for clinical study reports (ICH E3) in which numbers are checked by code, not by the model.** It takes a draft
 CSR, the study's source tables and the protocol synopsis, and:
 

@@ -1,0 +1,38 @@
+{
+  "missing_sections": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "found": [
+      "10.1",
+      "12.1",
+      "5.3"
+    ],
+    "expected": [
+      "10.1",
+      "12.1",
+      "5.3"
+    ]
+  },
+  "empty_sections": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "found": [
+      "12.2"
+    ],
+    "expected": [
+      "12.2"
+    ]
+  },
+  "error_recall": 1.0,
+  "errors_missed": [],
+  "false_alarms_on_correct_claims": 0,
+  "false_alarm_examples": [],
+  "draft_findings_total": 4,
+  "review_errors": 0,
+  "generated_sentences": 5,
+  "generated_sentences_clean": 5,
+  "revisions": 1,
+  "dataset": "Bundled synthetic SYN-301 study; planted errors and scripted model review",
+  "models": "scripted drafting and semantic judgement; no live model",
+  "limits": "Expert clinical semantics and multi-arm associations are not validated by this fixture."
+}

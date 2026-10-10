@@ -14,7 +14,7 @@ import re
 
 from .e3 import RESULTS_SECTIONS
 from .llm import LLM, complete_structured
-from .numcheck import numbers, unverified
+from .numcheck import contextual_unverified, numbers, signed_values, unverified
 from .prompts import REVIEW, SYSTEM
 from .schemas import DraftSection, Finding, ReviewVerdict, StructureReport
 from .sources import SourcePackage
@@ -79,15 +79,27 @@ def _terms(text: str) -> set[str]:
 def candidate_rows(pkg: SourcePackage, sentence: str) -> list[str]:
     """All rows of the table(s) whose row labels best match the sentence ("nausea", "hba1c", "death").
 
-    Table-level scope: a confidence interval or p-value often sits in neighbouring rows of the same table.
+    Rows with the best endpoint-label match; unrelated endpoints cannot supply values.
     """
     terms = _terms(sentence)
     scored = [(len(terms & _terms(pkg.row_labels[rid])), rid) for rid in pkg.rows]
     best = max((sc for sc, _ in scored), default=0)
     if not best:
         return []
-    tables = {rid.split(".")[0] for sc, rid in scored if sc == best}
-    return [rid for rid in pkg.rows if rid.split(".")[0] in tables]
+    selected = [rid for sc, rid in scored if sc == best]
+    # CI bounds and p-values are associated statistics, not interchangeable endpoints.
+    if re.search(r"\bCI\b|\bp\s*[<=>]", sentence, re.I):
+        tables = {rid.split(".")[0] for rid in selected}
+        for table in pkg.tables:
+            if table.id in tables:
+                selected += [
+                    table.row_id(i)
+                    for i, row in enumerate(table.rows)
+                    if row
+                    and re.search(r"(?:CI (?:lower|upper)|p-value)", row[0], re.I)
+                    and table.row_id(i) not in selected
+                ]
+    return selected
 
 
 def tables_for(pkg: SourcePackage, sentence: str, k: int = 4) -> str:
@@ -95,6 +107,33 @@ def tables_for(pkg: SourcePackage, sentence: str, k: int = 4) -> str:
     terms = _terms(sentence)
     ranked = sorted(pkg.tables, key=lambda t: -len(terms & _terms(t.title + " " + " ".join(r[0] for r in t.rows if r))))
     return "\n\n".join(t.render() for t in ranked[:k])
+
+
+def conflicting_claims(claims: list[tuple[str, str, str]]) -> list[tuple[str, str, str]]:
+    """Flag repeated statement templates with different values across sections.
+
+    Keep product codes, dates and explicit week/day labels as context. This is a
+    conservative consistency screen; different wording is not semantically compared.
+    """
+    seen: dict[str, tuple[str, str]] = {}
+    flagged = []
+    for section, text, origin in claims:
+        protected = []
+
+        def protect(match, protected=protected):
+            protected.append(match.group().lower())
+            return "protectedtoken" + chr(97 + len(protected) - 1)
+
+        cleaned = re.sub(r"\[T\d+\.R\d+[^]]*\]", "", text)
+        cleaned = re.sub(r"\b[A-Z]+-\d+\b|\b\d{4}-\d{2}-\d{2}\b|\b(?:week|day)\s+\d+\b", protect, cleaned, flags=re.I)
+        key = re.sub(r"(?<![\w-])[-−]?\d+(?:[.,]\d+)?", "VALUE", cleaned.lower())
+        key = " ".join(key.split()) + repr(protected)
+        values = tuple(signed_values(text))
+        previous = seen.get(key)
+        if previous and previous[0] != section and previous[1] != repr(values):
+            flagged.append((section, text, origin))
+        seen[key] = (section, repr(values))
+    return flagged
 
 
 async def review(
@@ -112,6 +151,23 @@ async def review(
 
     def add(**kw):
         findings.append(Finding(id=f"F{len(findings) + 1}", **kw))
+
+    claims = [
+        (sec.number or by_line.get(sec.line), text, "draft")
+        for sec in pkg.sections
+        if in_scope(sec.number or by_line.get(sec.line))
+        for text in sentences(sec.text)
+    ]
+    claims += [(d.number, sent.text, "generated") for d in drafted if d.status == "drafted" for sent in d.sentences]
+    for section, text, origin in conflicting_claims(claims):
+        add(
+            section=section,
+            sentence=text,
+            origin=origin,
+            type="unsupported",
+            severity="medium",
+            detail="Potential conflicting values in repeated statements across sections; verify endpoint, population and timing",
+        )
 
     # 1. The writer's draft: results and conclusions sections.
     for sec in pkg.sections:
@@ -148,6 +204,8 @@ async def review(
                     )
                     continue
                 missing = anywhere
+            context_errors = contextual_unverified(s, [pkg.rows[r] for r in rows]) if rows else []
+            missing = (missing or []) + context_errors
             if missing:
                 add(
                     section=number,
@@ -158,7 +216,7 @@ async def review(
                     detail=f"number(s) not found in the source tables or synopsis: {', '.join(missing)}",
                     suggestion="Check against the tables and correct, or cite the source.",
                 )
-            elif QUALITATIVE.search(s):
+            elif QUALITATIVE.search(s) or numbers(s):
                 llm_jobs.append((number, s, "draft"))
 
     # 2. Generated sections: citations must exist and must contain the numbers.
@@ -175,6 +233,17 @@ async def review(
                     type="invalid_citation",
                     severity="high",
                     detail=f"cited rows do not exist: {', '.join(bad)}",
+                )
+                continue
+            named_rows = candidate_rows(pkg, s.text)
+            if s.citations and named_rows and not set(s.citations) & set(named_rows):
+                add(
+                    section=d.number,
+                    sentence=s.text,
+                    origin="generated",
+                    type="unsupported",
+                    severity="high",
+                    detail="Cited rows do not match the endpoint named in the sentence; semantic review required",
                 )
                 continue
             has_numbers = [n for n in numbers(s.text) if n[0] not in IGNORE_NUMBERS]
@@ -198,6 +267,7 @@ async def review(
                 if s.citations
                 else []
             )
+            missing += contextual_unverified(s.text, [pkg.rows[c] for c in s.citations])
             if missing:
                 add(
                     section=d.number,
@@ -207,7 +277,7 @@ async def review(
                     severity="high",
                     detail=f"number(s) not in the cited rows {', '.join(s.citations)}: {', '.join(missing)}",
                 )
-            elif QUALITATIVE.search(s.text):
+            elif QUALITATIVE.search(s.text) or numbers(s.text):
                 llm_jobs.append((d.number, s.text, "generated"))
 
     # 3. LLM review of qualitative claims, in parallel.
