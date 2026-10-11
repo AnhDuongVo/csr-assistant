@@ -1,5 +1,13 @@
 # csr-assistant
 
+## Motivation
+
+Writing a clinical study report means translating source tables into a consistent narrative. Numbers, treatment arms and outcome descriptions can drift during drafting, and missing sections create additional review work.
+
+## What the program does
+
+csr-assistant takes a draft report, study tables and a protocol synopsis. It screens the report’s ICH E3 structure, drafts supported missing sections with table-row citations, and returns findings about selected numerical inconsistencies and qualitative claims. A medical writer can review the proposed sections and findings before exporting revised text and a review report. The project aims to make the source-to-report review trail easier to inspect.
+
 ## What this project demonstrates
 
 Demonstrates source-table drafting, ICH E3 structure screening and review findings for study-report text.
