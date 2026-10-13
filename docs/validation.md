@@ -25,3 +25,12 @@ The GitHub workflows have been added or retained, but their remote execution has
 ## Small offline evaluation
 
 The bundled synthetic study with scripted drafting/review produced 4 detections for 4 planted errors, no false alarms on its supplied correct-claim list, and 5 generated sentences without findings. Missing-section precision/recall were both 1.0 on this fixture. [Raw results](offline-evaluation.json). The scripted judge and small dataset do not establish clinical validity; cross-section matching only detects repeated statement templates, not arbitrary contradictory paraphrases.
+
+
+## Workflow recording — 13 October 2026
+
+The recording runs this repository’s source loading → ICH E3 structure screen → missing-section drafting → checking/revision → medical writer review → assembly workflow. The synthetic SYN-301 draft, CSV tables and synopsis are visible. Drafting and qualitative model reviews are scripted. Actual code detects missing sections and numerical errors, revises a planted generated count from 125 to 120, preserves the consent section as needing writer input, and records synthetic writer decisions. Findings in the original draft remain open; accepting proposed sections does not resolve them. The output is a revised draft and a review report, not a final clinical document.
+
+The added optional Streamlit AppTest executes the repository pipeline and verifies the resulting output and review behavior. Install `.[demo,dev]` to include it. This does not validate hosted/self-hosted endpoints or domain correctness.
+
+Validation for this change: full local suite **12 passed**. Ruff checks passed for the interface, fixtures and added regression test. MP4 decoding passed without errors. No live endpoint or domain validation was performed.

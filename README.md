@@ -16,7 +16,7 @@ Demonstrates source-table drafting, ICH E3 structure screening and review findin
 
 ![Demo](docs/demo.gif)
 
-[Portfolio videos](https://anhduongvo.github.io/projects/clinical-agentic-ai/). Clinical recordings use the separate simplified interactive demo.
+[Portfolio videos](https://anhduongvo.github.io/projects/clinical-agentic-ai/). This recording runs the repository workflow interface with explicitly labeled offline fixtures.
 
 ## Try it offline
 
@@ -78,7 +78,16 @@ flowchart LR
 
 ## Demo details
 
-Two report sections in the interactive demo. A placebo-arm change of -1.4 is flagged against the table's -0.35 and verified once corrected; a discontinuation count of 3 is flagged against the table's 2. The video is on [anhduongvo.github.io](https://anhduongvo.github.io/projects/clinical-agentic-ai/).
+The recording runs this repository’s source loading → ICH E3 structure screen → missing-section drafting → checking/revision → medical writer review → assembly workflow. The synthetic SYN-301 draft, CSV tables and synopsis are visible. Drafting and qualitative model reviews are scripted. Actual code detects missing sections and numerical errors, revises a planted generated count from 125 to 120, preserves the consent section as needing writer input, and records synthetic writer decisions. Findings in the original draft remain open; accepting proposed sections does not resolve them. The output is a revised draft and a review report, not a final clinical document.
+
+Run the same interface without credentials:
+
+```bash
+python -m pip install -e ".[demo]"
+streamlit run examples/workflow.py --theme.base light
+```
+
+For the interface regression check, install `.[demo,dev]` and run `pytest -q`. Previous media are preserved in `old-videos/2026-10-13-before-workflows/`.
 
 ## Why
 
